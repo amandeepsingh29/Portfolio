@@ -1,0 +1,19 @@
+.terminal-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 100%;
+  padding: 0 0.5rem;
+}
+
+.terminal-content::-webkit-scrollbar {
+  display: none;
+}
+
+.terminal-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  line-height: 1.5;
+  padding-right: 1rem;
+}

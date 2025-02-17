@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Disable text selection */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Enable text selection for input fields and textareas */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes matrixFall {
+  0% {
+    transform: translateY(-20px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.matrix-digit {
+  position: fixed;
+  color: #00ff00;
+  font-family: monospace;
+  pointer-events: none;
+  font-size: 14px;
+  animation: matrixFall 1s linear forwards;
+  text-shadow: 0 0 5px #00ff00;
+  z-index: 9999;
+}
+
+.matrix-background {
+  position: relative;
+}
+
+.matrix-background::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(0, 255, 0, 0.1), rgba(0, 0, 0, 0.3));
+  z-index: 1;
+  pointer-events: none;
+}
+
+body {
+  @apply bg-gray-800;
+}
