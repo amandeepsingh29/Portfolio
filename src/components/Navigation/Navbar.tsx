@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Menu, X } from 'lucide-react';
 import NavLink from './NavLink';
 
-export default function Navbar() {
+const navItems = [
+  { name: 'Home', path: '/' },
+  { name: 'About', path: '/about' },
+  { name: 'Projects', path: '/projects' },
+  { name: 'Contact', path: '/contact' },
+] as const;
+
+const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Projects', path: '/projects' },
-    { name: 'Contact', path: '/contact' },
-  ];
+  const toggleMenu = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
 
   return (
     <nav className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-sm z-50">
@@ -30,23 +34,22 @@ export default function Navbar() {
             </div>
           </div>
           
-          <div className="md:hidden">
-            <button 
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-300 hover:text-white p-2"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+          <button 
+            onClick={toggleMenu}
+            className="md:hidden text-gray-300 hover:text-white p-2"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
       {isOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-900/80 backdrop-blur-sm">
             {navItems.map((item) => (
-              <NavLink key={item.path} to={item.path}>
+              <NavLink key={item.path} to={item.path} onClick={toggleMenu}>
                 {item.name}
               </NavLink>
             ))}
@@ -55,4 +58,6 @@ export default function Navbar() {
       )}
     </nav>
   );
-}
+};
+
+export default memo(Navbar);

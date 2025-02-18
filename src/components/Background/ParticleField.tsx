@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
@@ -6,12 +6,12 @@ import * as THREE from 'three';
 function ParticleCloud() {
   const ref = useRef<THREE.Points>(null);
   
-  // Generate particles with proper positions using useMemo
+  // Memoize particles to prevent unnecessary recalculations
   const particles = useMemo(() => {
-    const positions = new Float32Array(5000 * 3);
+    const positions = new Float32Array(2500 * 3); // Reduced from 5000 for better performance
     const radius = 1.5;
     
-    for (let i = 0; i < 5000; i++) {
+    for (let i = 0; i < 2500; i++) {
       const theta = THREE.MathUtils.randFloatSpread(360);
       const phi = THREE.MathUtils.randFloatSpread(360);
       
@@ -23,12 +23,15 @@ function ParticleCloud() {
     return positions;
   }, []);
 
-  useFrame((state, delta) => {
+  // Memoize animation callback
+  const animate = useCallback((delta: number) => {
     if (ref.current) {
       ref.current.rotation.x -= delta / 10;
       ref.current.rotation.y -= delta / 15;
     }
-  });
+  }, []);
+
+  useFrame((_, delta) => animate(delta));
 
   return (
     <group rotation={[0, 0, Math.PI / 4]}>
@@ -45,22 +48,15 @@ function ParticleCloud() {
   );
 }
 
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  return (
-    <React.Suspense fallback={<div className="fixed inset-0 -z-10 bg-gray-900" />}>
-      {children}
-    </React.Suspense>
-  );
-}
-
 export default function ParticleField() {
   return (
     <div className="fixed inset-0 -z-10">
-      <ErrorBoundary>
-        <Canvas camera={{ position: [0, 0, 1] }}>
-          <ParticleCloud />
-        </Canvas>
-      </ErrorBoundary>
+      <Canvas
+        camera={{ position: [0, 0, 1] }}
+        dpr={Math.min(2, window.devicePixelRatio)} // Limit DPR for better performance
+      >
+        <ParticleCloud />
+      </Canvas>
     </div>
   );
 }

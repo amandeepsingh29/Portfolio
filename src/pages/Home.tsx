@@ -1,36 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Terminal from '../components/Terminal/Terminal';
 import SocialLinks from '../components/SocialLinks';
-import { HamsterLoader } from '../components/Loaders';
 import { initializeEasterEggs } from '../utils/easterEggs';
 
 export default function Home() {
   const [isTerminalMinimized, setIsTerminalMinimized] = useState(false);
-  const [isLoading, setIsLoading] = useState(() => {
-    // Check if this is the first load
-    return !localStorage.getItem('hasVisited');
-  });
 
   useEffect(() => {
     initializeEasterEggs();
-    
-    if (isLoading) {
-      // Set visited flag and hide loader after delay
-      const timer = setTimeout(() => {
-        localStorage.setItem('hasVisited', 'true');
-        setIsLoading(false);
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (!localStorage.getItem('hasVisited')) {
+      localStorage.setItem('hasVisited', 'true');
     }
-  }, [isLoading]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <HamsterLoader />
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center py-20 px-4">
@@ -43,7 +24,7 @@ export default function Home() {
               Singh
             </h1>
             <h2 className="text-lg sm:text-xl lg:text-2xl text-gray-400 mb-8">
-              ML Developer
+              Software Developer
             </h2>
             <div className={`flex justify-center ${isTerminalMinimized ? 'lg:justify-center' : 'lg:justify-end'}`}>
               <SocialLinks />
