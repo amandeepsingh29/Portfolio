@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Phone, MapPin, Github, Linkedin, BookOpen, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Github, Linkedin, BookOpen, Send, Loader2 } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 
 const contactInfo = [
   { icon: Mail, label: 'Email', value: 'amandeep.singh.dsc@gmail.com', href: 'mailto:amandeep.singh.dsc@gmail.com' },
@@ -15,22 +16,53 @@ const socialLinks = [
 ];
 
 export default function Contact() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    setFormData({ name: '', email: '', message: '' });
-    
-    setTimeout(() => setShowSuccess(false), 3000);
+    try {
+      if (!formRef.current) return;
+
+      // Log for debugging
+      console.log('Sending email with:', {
+        serviceId: 'service_8x61j8c',
+        templateId: 'template_8dp2hvp',
+        publicKey: '8nyPwllbFxbGUmydv',
+        formData: {
+          from_name: formData.name,
+          from_email: formData.email,
+          message: formData.message
+        }
+      });
+
+      // Initialize EmailJS with your public key
+      emailjs.init('8nyPwllbFxbGUmydv');
+
+      const result = await emailjs.sendForm(
+        'service_8x61j8c',
+        'template_8dp2hvp',
+        formRef.current
+      );
+      
+      console.log('Email sent successfully:', result.text);
+      setShowSuccess(true);
+      setFormData({ name: '', email: '', message: '' });
+      
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      setError('Failed to send message. Please try again later.');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -41,14 +73,16 @@ export default function Contact() {
       className="max-w-6xl mx-auto py-12 px-4 relative"
     >
       <AnimatePresence>
-        {showSuccess && (
+        {(showSuccess || error) && (
           <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+            className={`fixed top-24 left-1/2 transform -translate-x-1/2 ${
+              error ? 'bg-red-500' : 'bg-green-500'
+            } text-white px-6 py-3 rounded-lg shadow-lg z-50`}
           >
-            Message sent successfully! 🎉
+            {error || 'Message sent successfully! 🎉'}
           </motion.div>
         )}
       </AnimatePresence>
@@ -80,22 +114,22 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 + (index * 0.1) }}
-                className="flex items-center space-x-4 group"
+                className="flex items-start space-x-4 group"
               >
-                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
                   <item.icon className="w-6 h-6 text-blue-400" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-gray-400 text-sm">{item.label}</p>
                   {item.href ? (
                     <a 
                       href={item.href}
-                      className="text-white hover:text-blue-400 transition-colors"
+                      className="text-white hover:text-blue-400 transition-colors break-all"
                     >
                       {item.value}
                     </a>
                   ) : (
-                    <p className="text-white">{item.value}</p>
+                    <p className="text-white break-all">{item.value}</p>
                   )}
                 </div>
               </motion.div>
@@ -124,6 +158,7 @@ export default function Contact() {
         </motion.div>
 
         <motion.form
+          ref={formRef}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -136,6 +171,7 @@ export default function Contact() {
             </label>
             <input
               type="text"
+              name="from_name"
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -149,6 +185,7 @@ export default function Contact() {
             </label>
             <input
               type="email"
+              name="from_email"
               id="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -162,6 +199,7 @@ export default function Contact() {
             </label>
             <textarea
               id="message"
+              name="message"
               rows={6}
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -178,8 +216,17 @@ export default function Contact() {
               isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
             }`}
           >
-            <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
-            <Send className={`w-4 h-4 ${isSubmitting ? 'animate-spin' : ''}`} />
+            {isSubmitting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                <span>Sending...</span>
+              </>
+            ) : (
+              <>
+                <span>Send Message</span>
+                <Send size={18} />
+              </>
+            )}
           </motion.button>
         </motion.form>
       </div>
